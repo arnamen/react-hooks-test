@@ -1,4 +1,4 @@
-import React, { useReducer, useCallback } from 'react';
+import React, { useReducer, useCallback, useMemo } from 'react';
 
 import IngredientForm from './IngredientForm';
 import IngredientList from './IngredientList'
@@ -79,22 +79,22 @@ const Ingredients = () => {
   }
   
 
-  const removeIngredientHandler = async (id) => {
+  const removeIngredientHandler = useCallback(async (id) => {
 
-      try {
-        dispatchHttp({type: 'SEND'})
-        await fetch(`https://react-hooks-test-72d09.firebaseio.com/ingredients/${id}.json`, {
-        method: 'DELETE'
-        });
-        dispatchHttp({type: 'RESPONSE'})
-        dispatch({
-          type: 'DELETE',
-          id: id
-        })
-      } catch (error) {
-        dispatchHttp({type: 'ERROR', error: error})
-      }
-  }
+    try {
+      dispatchHttp({type: 'SEND'})
+      await fetch(`https://react-hooks-test-72d09.firebaseio.com/ingredients/${id}.json`, {
+      method: 'DELETE'
+      });
+      dispatchHttp({type: 'RESPONSE'})
+      dispatch({
+        type: 'DELETE',
+        id: id
+      })
+    } catch (error) {
+      dispatchHttp({type: 'ERROR', error: error})
+    }
+}, [])
   
 
   const filteredIngredientsHandler = useCallback((filteredIngredients) => {
@@ -103,6 +103,14 @@ const Ingredients = () => {
       ingredients: filteredIngredients
     })
   }, [])
+
+  const ingredientList = useMemo(() =>
+    <IngredientList ingredients={userIngredients}
+      onRemoveItem={(id) => {
+        removeIngredientHandler(id)
+      }
+      } />, [userIngredients, removeIngredientHandler])
+
   return (
     <div className="App">
 
@@ -111,11 +119,7 @@ const Ingredients = () => {
       <IngredientForm isLoading={httpState.loading} onAddIngredient={(ingredient) => addIngredienthandler(ingredient)}/>
       <section>
         <Search onLoadIngredients={filteredIngredientsHandler}/>
-        <IngredientList ingredients={userIngredients} 
-          onRemoveItem={(id) => {
-            removeIngredientHandler(id)
-          }
-        }/>
+        {ingredientList}
     </section>
     </div>
   );
